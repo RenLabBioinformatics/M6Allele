@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration>
+    
+    <!-- output to console -->
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="[%-4p]%d{yyyy-MM-dd HH:mm:ss,SSS} %m%n" />
+        </layout>
+    </appender>
+    
+    <!-- output DEBUG level information /output_dir/logout.log -->
+    <appender name="D" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="${log_home}/logout.log" />
+        <param name="Append" value="true" />
+        <param name="Threshold" value="info" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-d{yyyy-MM-dd HH:mm:ss} [%t: %r]-[%p] %m%n" />
+        </layout>
+    </appender>
+    
+    <!-- output ERROR level information /output_dir/logout.log -->
+    <appender name="E" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="${log_home}/error.log" />
+        <param name="Append" value="true" />
+        <param name="Threshold" value="ERROR" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-d{yyyy-MM-dd HH:mm:ss} [ %t: %r]-[%p] %m%n" />
+        </layout>
+    </appender>
+    
+    <!-- settings -->
+    <root>
+        <priority value="info" />
+        <appender-ref ref="stdout" />
+        <appender-ref ref="D" />
+        <appender-ref ref="E" />
+    </root>
+</log4j:configuration>
