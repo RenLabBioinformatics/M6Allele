@@ -3,7 +3,7 @@
 ## Introduction
 We have developed an algorithm called **M6Allele** for identifying allele-specific m6A modifications. To facilitate its usage by researchers, we have also encapsulated our analysis process into a pipeline. You can learn more about the pipeline and the algorithm's usage from the following two modules:
 * [Pipeline](#m6allele-pipeline)
-* [M6Allele algorithm](#m6allele-1.0)
+* [M6Allele algorithm](#m6allele-10)
 
 ## M6Allele Pipeline
 ### PARAMETER INTRODUCTION
