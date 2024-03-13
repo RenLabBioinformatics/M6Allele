@@ -1,10 +1,176 @@
-# M6Allele 1.0
+# M6Allele Pipeline & M6Allele algorithm
 
-## HARDWARE/SOFTWARE REQUIREMENTS
+## Introduction
+We have developed an algorithm called **M6Allele** for identifying allele-specific m6A modifications. To facilitate its usage by researchers, we have also encapsulated our analysis process into a pipeline. You can learn more about the pipeline and the algorithm's usage from the following two modules:
+* [Pipeline](#M6Allele Pipeline)
+* [M6Allele algorithm](#M6Allele 1.0)
+
+## M6Allele Pipeline
+### PARAMETER INTRODUCTION
+* `-g/--gtf` : required, if -sbsi is false, you should provide the file name of your own GTF file
+* `-fa/--fasta` : required, if -sbsi is false, you should provide the file name of your own reference genome file
+* `-sf/--skip_fastqc` : optional, whether to skip the fastqc phase. Default false
+* `-se/--single_end` : required, the fastq files are single-end or paired-end sequencing
+* `-vg/--varscan_or_gatk` : optional, use VarScan or GATK to call snp, v: VarScan, g: GATK. Default v
+* `-f/--function` : required, the function of M6Allele, including `AseGeneDetection`, `AsmPeakDetection`, `SampleSpecificASM`. Please refer to [M6Allele 1.0](#M6Allele 1.0) for specific explanation
+* `-s/--sample` : required, the name of the file containing the sample name to be processed
+* `-gzip/--is_gzip` : required, whether the fastq file is compressed
+* `-db/--dbSnp` : optional, the name of dbSNP vcf file
+* `-h/--help` : help message of the pipeline
+
+### USAGE
+#### Overview
+1. Install [docker(v24.0.7)](https://www.docker.com/get-started/)
+2. Download a compressed docker image file from this [link](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/m6allelepipe.tar.gz) and import it using the following command:
+   ```shell
+      cd your_compressed_file_directory
+      gunzip m6allelepipe.tar.gz
+      docker load -i m6allelepipe.tar
+   ```
+    * If you're unable to down the image from above link, you can download the required files for local packaging images from [here](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/docker.tar.gz) and then build the image locally
+        ```shell
+            # build command
+            docker build -t your_image_name .
+        ```
+3. Assuming your current working directory is `your_work_directory`, you need to create the following subdirectories or files and place the required files:
+   * `fastq` : **required**, containing the fastq files you need to process
+   * `scripts` : **required**, containing three script files: main.sh, main.py and getPeakInMeT.R, which you can download from this [link](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/scripts.tar.gz)
+   * `reference` : **required**, containing references files required for the processing workflow
+        * `your_gtf_file.gtf` : we provide our default fasta file, you can download it from [this](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/gtfAndfasta.tar.gz)
+        * `your_reference_genome_file.fa` : we provide our default gtf file, you can download it from [this](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/gtfAndfasta.tar.gz)
+        * If you want to use GATK for SNP calling, you need to provide the dbSNP dataset. Here, we provide our default dbSNP dataset. You can download the `GCF_000001405.39.dbsnp.vcf.gz`from [here](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/GCF_000001405.39.dbsnp.vcf.gz) and `GCF_000001405.39.dbsnp.vcf.gz.tbi` files from [here](https://renlab.oss-cn-shenzhen.aliyuncs.com/M6Allele/GCF_000001405.39.dbsnp.vcf.gz.tbi) and place them in the `reference` folder. If you want to use a different version of the dbSNP dataset, please follow these steps:
+          * Download the GCF_XXX.vcf.gz and GCF_XXX.vcf.gz.tbi files from the [dbSNP database](https://ftp.ncbi.nih.gov/snp/latest_release/VCF/), and download the [chromosome conversion files](https://ftp.ncbi.nih.gov/genomes/all/GCF/000/001/405/) corresponding to the above-mentioned files. Process the downloaded dbSNP files using the following commands: 
+              ```shell
+                # convert the chromosome names in the GCF_XXX.vcf.gz file to 1, 2, ..., X, Y
+                bcftools annotate --rename-chrs chromosome_conversion.txt --threads 10 -Oz -o your_new_process_dbsnp_file.vcf.gz your_downloaded_dbsnp_file.vcf.gz
+                # generate .tbi file
+                bcftools index -t your_new_process_dbsnp_file.vcf.gz
+              ```
+          * Move the resulting new dbSNP database `your_new_process_dbsnp_file.vcf.gz` and `your_new_process_dbsnp_file.vcf.gz.tbi` files to the `reference` folder
+          * You also need to provide .fai and .dict index files for the reference genome .fa file. If your fasta file was downloaded from the link we provided, you will also download the corresponding .fai and .dict files
+          * However, If you have your own fasta file, you can generate the corresponding .fai and .dict files using the following commands. Then move .fa and .dict file to `reference` folder
+            ``` shell
+                # Please ensure that the .fai, .dict, and .fa files have the same prefix in their filenames
+                # .fai generate command
+                samtools faidx your_reference_genome_file.fa
+                # .dict generate command
+                gatk CreateSequenceDictionary -R your_reference_genome_file.fa -O your_reference_genome_file.dict
+            ```
+   * `your_sample.txt`: **required**, containing the sample names you want to process, which are the prefixes of the fastq files. **Each line is separated by either space or tab.** According to the M6Allele function, there are three formats:
+        * `AseGeneDetection` : **Each line represents the name of an RNA-seq sample**. If there are multiple duplicates, use multiple lines to represent them
+        * `AsmPeakDetection` : **Each line consists of two columns, representing the INPUT sample name and the corresponding IP sample name for MeRIP-seq**. If there are multiple duplicates, use multiple lines to represent them
+        * `SampleSpecificASM` : **Each line consists of four columns, representing the INPUT sample name and the corresponding IP sample name for MeRIP-seq of sample 1, as well as the INPUT sample name and the corresponding IP sample name for MeRIP-seq of sample 2**. If there are multiple duplicates, use multiple lines to represent them
+
+### Specific Example:
+Here, we have listed several specific examples of using the pipeline. If you have other requirements, you can achieve them by combining different parameters.
+### 1. To use VarScan for calling SNPs and detecting ASE genes
+
+**data dependency:**\
+`your_work_directory`: there are the following subfolders and files
+* `fastq` : It contains two files:
+  * input1.fastq.gz
+  * input2.fastq.gz
+* `scripts` : containing three script files: main.sh, main.py and getPeakInMeT.R
+* `reference` : 
+  * your_fasta_file.fa
+  * your_gtf_file.gtf
+* `sample.txt` : It contains two lines:
+  * First line: input1
+  * Second line: input2
+
+**example:**
+```shell
+  docker run -v /path/to/your_work_directory:/data renlab303/m6allelepipe -f AseGeneDetection -s sample.txt -gzip true -se true -fa your_fasta_file.fa -g your_gtf_file.gtf
+```
+
+### 2. To use GATK for calling SNPs and detecting ASM m6A signals
+**data dependency:**\
+`your_work_directory`: there are the following subfolders and files
+* `fastq` : It contains eight files: 
+  * input1_1.fastq.gz
+  * input1_2.fastq.gz
+  * ip1_1.fastq.gz
+  * ip1_2.fastq.gz 
+  * input2_1.fastq.gz
+  * input2_2.fastq.gz
+  * ip2_1.fastq.gz
+  * ip2_2.fastq.gz
+* `scripts` : containing three script files: main.sh, main.py and getPeakInMeT.R
+* `reference` :
+  * your_gtf_file.gtf
+  * your_fasta_file.fa
+  * your_fasta_file.fa.fai
+  * your_fasta_file.dict
+  * your_dbSNP_vcf_file.vcf.gz
+  * your_dbSNP_vcf_file.vcf.gz.tbi
+* `sample.txt` : It contains two lines
+  * input1&emsp;ip1
+  * input2&emsp;ip2
+
+**example:**
+```shell
+  docker run -v /path/to/your_work_directory:/data renlab303/m6allelepipe -f AsmPeakDetection -s sample.txt -gzip true -se false -g your_gtf_file.gtf -fa your_fasta_file.fa -vg g -db your_dbSNP_vcf_file.vcf.gz
+```
+
+### 3. To use GATK for calling SNPs and detecting Sample-specific ASM m6A signals
+**data dependency:**\
+`your_work_directory`: there are the following subfolders and files
+* `fastq` : It contains eight files: 
+  * sample1_input1.fastq.gz
+  * sample1_ip1.fastq.gz
+  * sample2_input1.fastq.gz
+  * sample2_ip1.fastq.gz
+  * sample1_input2.fastq.gz
+  * sample1_ip2.fastq.gz
+  * sample2_input2.fastq.gz
+  * sample2_ip2.fastq.gz 
+* `scripts` : containing three script files: main.sh, main.py and getPeakInMeT.R
+* `reference` : It contains following files:
+    * your_gtf_file.gtf
+    * your_fasta_file.fa
+    * your_fasta_file.fa.fai
+    * your_fasta_file.dict
+    * your_dbSNP_vcf_file.vcf.gz
+    * your_dbSNP_vcf_file.vcf.gz.tbi
+* `sample.txt` : It contains two lines
+    * sample1_input1&emsp;sample1_ip1&emsp;sample2_input1&emsp;sample2_ip1
+    * sample1_input2&emsp;sample1_ip2&emsp;sample2_input2&emsp;sample2_ip2
+
+**example:**
+```shell
+  docker run -v /path/to/your_work_directory:/data renlab303/m6allelepipe -f SampleSpecificASM -s sample.txt -gzip true -se true -g your_gtf_file.gtf -fa your_fasta_file.fa -vg g -db your_sbSNP_vcf_file.vcf.gz
+```
+
+### Pipeline overview
+
+This pipeline is built using shell scripts and integrates tools as follows:
+
+* **Quality control and preprocessing of raw data**
+    * [fastp](https://github.com/OpenGene/fastp): quality trimming and adapter clipping
+    * [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/): generate quality reports
+* **Build STAR index**
+  * [STAR](https://github.com/alexdobin/STAR): build index
+* **Read alignment**
+    * [STAR](https://github.com/alexdobin/STAR): Spliced Transcripts Alignment to a Reference
+    * [Samtools](http://www.htslib.org/): Reads sort and remove duplicates
+* **SNP calling**
+    * [VarScan](https://varscan.sourceforge.net/): Call SNPs from MeRIP-seq INPUT sample
+    * [bcftools](http://www.htslib.org/doc/1.1/bcftools.html): mark the result of VarScan
+    * [vcftools](https://vcftools.github.io/): filter the result of bcftools
+    * [GATK](https://gatk.broadinstitute.org/hc/en-us/articles/360035531192-RNAseq-short-variant-discovery-SNPs-Indels): Call SNPs from MeRIP-seq INPUT sample
+* **Peak calling**
+    * [MeTPeak](https://github.com/compgenomics/MeTPeak): a novel, graphical model-based peak-calling method
+    * [BEDTools](https://bedtools.readthedocs.io/en/latest/): using "mergeBed" function
+* **ASE or ASM m6A detection**
+    * [M6Allele](#M6Allele 1.0): A toolkit for detection of allele-specific RNA N6-methyladenosine modifications 
+
+## M6Allele 1.0
+
+### HARDWARE/SOFTWARE REQUIREMENTS
 * Java 1.8
 * Windows / Linux / Mac OS
 
-## INSTALLATION
+### INSTALLATION
 * clone the repo,
 ```
 git clone https://github.com/Jakob666/allele-specificM6A.git
@@ -15,8 +181,8 @@ cd ./allele-specificM6A
 ```
 make sure the directory contains `M6Allele.jar`.
 
-## USAGE
-### Overview
+### USAGE
+#### Overview
 #### Tools Introduction
 M6Allele.jar provides the following tools:
 
@@ -179,7 +345,7 @@ java -jar ./M6Allele.jar SampleSpecificASM
      -t 6
 ```
 
-## FORMAT DECLARATION
+### FORMAT DECLARATION
 ### 1. VCF generate by SNP calling of RNA and MeRIP sequencing data
 At least 2 columns,
 * \#CHROM: chromosome number, `1,2,3,...X,Y,MT`
@@ -223,7 +389,7 @@ Contains fields below, more details see [BED format demonstration UCSC](http://g
 > 1	34180162	34180463	ENSMUSG00000026131	0.00022	+	34180162	34180463	0	1	301,	0\
 > 1	34306583	34307612	ENSMUSG00000026131	0.00038	+	34306583	34307612	0	2	68,283,	0,746
 
-## OUTPUT FILE DESCRIPTION
+### OUTPUT FILE DESCRIPTION
 ### 1. ASE gene detection output
 When the algorithm finishes running, the following files will be in your output folder:
 * error.log: error logs generated during program execution
