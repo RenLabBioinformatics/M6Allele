@@ -255,7 +255,7 @@ public class SpecificAsmDetection {
      * get gpd function to compute threshold
      */
     public void getGpdFunction() {
-        InputStream paramInputStream = AseGeneDetection.class.getClassLoader().getResourceAsStream("aseCategoryParamNegativeBinomial.txt");
+        InputStream paramInputStream = AseGeneDetection.class.getClassLoader().getResourceAsStream("gpdParameterTwoSample.txt");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(paramInputStream))){
             String line = br.readLine();
             String[] infos;
@@ -276,7 +276,7 @@ public class SpecificAsmDetection {
     }
     
     public void getDistributionType2GeneIds() {
-        InputStream geneRecords = AsmPeakDetection.class.getClassLoader().getResourceAsStream("merge_1_10_100.txt");
+        InputStream geneRecords = AsmPeakDetection.class.getClassLoader().getResourceAsStream("distribution2Genes.txt");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(geneRecords))){
             String line;
             String[] infos;
