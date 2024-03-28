@@ -7,8 +7,8 @@ We have developed an algorithm called **M6Allele** for identifying allele-specif
 
 ## M6Allele Pipeline
 ### PARAMETER INTRODUCTION
-* `-g/--gtf` : required, if -sbsi is false, you should provide the file name of your own GTF file
-* `-fa/--fasta` : required, if -sbsi is false, you should provide the file name of your own reference genome file
+* `-g/--gtf` : required, the file name of your own GTF file
+* `-fa/--fasta` : required, the file name of your own reference genome file
 * `-sf/--skip_fastqc` : optional, whether to skip the fastqc phase. Default false
 * `-se/--single_end` : required, the fastq files are single-end or paired-end sequencing
 * `-vg/--varscan_or_gatk` : optional, use VarScan or GATK to call snp, v: VarScan, g: GATK. Default v
