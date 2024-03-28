@@ -12,7 +12,7 @@ We have developed an algorithm called **M6Allele** for identifying allele-specif
 * `-sf/--skip_fastqc` : optional, whether to skip the fastqc phase. Default false
 * `-se/--single_end` : required, the fastq files are single-end or paired-end sequencing
 * `-vg/--varscan_or_gatk` : optional, use VarScan or GATK to call snp, v: VarScan, g: GATK. Default v
-* `-f/--function` : required, the function of M6Allele, including `AseGeneDetection`, `AsmPeakDetection`, `SampleSpecificASM`. Please refer to [M6Allele 1.0](#M6Allele 1.0) for specific explanation
+* `-f/--function` : required, the function of M6Allele, including `AseGeneDetection`, `AsmPeakDetection`, `SampleSpecificASM`. Please refer to [M6Allele 1.0](#m6allele-10) for specific explanation
 * `-s/--sample` : required, the name of the file containing the sample name to be processed
 * `-gzip/--is_gzip` : required, whether the fastq file is compressed
 * `-db/--dbSnp` : optional, the name of dbSNP vcf file
