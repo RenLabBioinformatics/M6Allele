@@ -107,7 +107,7 @@ public class SpecificAsmDetection {
                 @Override
                 public void run() {
                     List<String[]> statistic;
-                    double df, scaleParam, aveDepth, s1GeneExpressOddRation, s2GeneExpressOddRatio;
+                    double df = 5, scaleParam = 10, s1GeneExpressOddRation, s2GeneExpressOddRatio;
                     String[] sample1MajorPeakReads, sample1MinorPeakReads,
                             sample2MajorPeakReads, sample2MinorPeakReads;
                     SpecificAsmBayesianModel model;
@@ -134,10 +134,6 @@ public class SpecificAsmDetection {
                         HashMap<Integer, String[]> sample1SnpPos2BaseCount = sample1GeneAlleleReads.get(name);
                         HashMap<Integer, String[]> sample2SnpPos2BaseCount = sample2GeneAlleleReads.get(name);
                         // get p value via hierarchical model
-                        df = Math.max(3, sample1MajorPeakReads.length);
-                        aveDepth = Arrays.stream(sample1MajorPeakReads).
-                                map(t -> Double.valueOf(t.split(":")[1])).mapToDouble(t -> t).average().getAsDouble();
-                        scaleParam = aveDepth < 10 ? 50 : 100;
                         double pVal, peakOddRatio, peakMAF;
                         model = new SpecificAsmBayesianModel(sampleTimes, burnIn, sample1MajorPeakReads, sample1MinorPeakReads,
                                 sample2MajorPeakReads, sample2MinorPeakReads, s1GeneExpressOddRation, s2GeneExpressOddRatio,

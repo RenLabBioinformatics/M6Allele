@@ -381,7 +381,7 @@ public class AseGeneDetection {
                 @Override
                 public void run() {
                     ArrayList<int[]> statistic;
-                    double df, scaleParam, aveDepth, epsilon = 0.00000000001, mafLowerBound = 0.49, asLowBound = 0.59;
+                    double df = 5, scaleParam = 10;
                     int[] majorCount, minorCount, majorBackground, minorBackground;
                     HierarchicalBayesianModelAse hb;
                     try {
@@ -391,19 +391,6 @@ public class AseGeneDetection {
                         minorCount = statistic.get(1);
                         majorBackground = statistic.get(2);
                         minorBackground = statistic.get(3);
-                        if (majorCount.length == 1 && minorCount[0] == 0 && majorCount[0] <= 35) {
-                            df = 2;
-                        }
-                        else {
-                            df = Math.max(3, majorCount.length);
-                        }
-                        aveDepth = Arrays.stream(majorCount).average().getAsDouble();
-                        if (majorCount.length == 1) {
-                            scaleParam = 50;
-                        }
-                        else {
-                            scaleParam = (aveDepth - 15 < epsilon)? 50: 100;
-                        }
                         hb = new HierarchicalBayesianModelAse(df, scaleParam, samplingTime, burnIn,
                                 majorCount, minorCount, majorBackground, minorBackground);
                         double p, geneOddRatio, geneMAF;

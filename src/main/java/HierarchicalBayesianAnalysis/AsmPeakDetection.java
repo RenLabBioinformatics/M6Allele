@@ -452,7 +452,7 @@ public class AsmPeakDetection {
                 @Override
                 public void run() {
                     List<String[]> statistic;
-                    double df, aveDepth, scaleParam;
+                    double df = 5, scaleParam = 10;
                     String[] majorCount, minorCount;
                     HierarchicalBayesianModelAsm hb;
                     try {
@@ -477,18 +477,6 @@ public class AsmPeakDetection {
                         // majorAllele:count:bam2, minorAllele:count:bam2....]
                         HashMap<Integer, String[]> snpPos2BaseCount = aseGeneIdName2SnpBaseCount.get(label);
                         // get p value via hierarchical model
-                        if (majorCount.length == 1 && Integer.parseInt(minorCount[0].split(":")[1]) == 0 &&
-                                Integer.parseInt(majorCount[0].split(":")[1]) <= 35) {
-                            df = 2;
-                        } else {
-                            df = Math.max(3, majorCount.length);
-                        }
-                        aveDepth = Arrays.stream(majorCount).map(t -> Double.valueOf(t.split(":")[1])).mapToDouble(t -> t).average().getAsDouble();
-                        if (majorCount.length == 1) {
-                            scaleParam = 50;
-                        } else {
-                            scaleParam = (aveDepth - 15 < 0.000001)? 50: 100;
-                        }
                         double pVal, peakOddRatio, peakMAF;
                         String distributionType;
                         hb = new HierarchicalBayesianModelAsm(df, scaleParam, samplingTime,
